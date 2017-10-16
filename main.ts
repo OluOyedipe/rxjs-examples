@@ -4,6 +4,7 @@ import "rxjs/add/operator/filter";
 import "rxjs/add/observable/fromEvent";
 import "rxjs/add/operator/delay";
 import "rxjs/add/operator/mergeMap";
+import "rxjs/add/operator/retry";
 
 let output = document.getElementById('output');
 let button = document.getElementById('button');
@@ -17,15 +18,18 @@ let load = (url: string) => {
 
 
         xhr.addEventListener('load', () => {
-
-            let data = JSON.parse(xhr.responseText);
-            observer.next(data);
-            observer.complete();
+            if (xhr.status === 200) {
+                let data = JSON.parse(xhr.responseText);
+                observer.next(data);
+                observer.complete();
+            } else {
+                observer.error(xhr.statusText);
+            }
 
         });
         xhr.open("GET", url);
         xhr.send();
-    });
+    }).retry(3);
 
 };
 
@@ -38,7 +42,7 @@ let renderMovies = (movies) => {
 };
 
 
-click.flatMap(event => load("movies.json"))
+click.flatMap(event => load("moviess.json"))
     .subscribe(
     renderMovies,
     e => console.log(`error: ${e}`),
