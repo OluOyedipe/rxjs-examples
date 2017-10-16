@@ -4,27 +4,31 @@ import "rxjs/add/operator/filter";
 import "rxjs/add/observable/fromEvent";
 import "rxjs/add/operator/delay";
 
-let circle = document.getElementById('circle');
+let output = document.getElementById('output');
+let button = document.getElementById('button');
 
-let source = Observable.fromEvent(document, 'mousemove')
-    .map((e: MouseEvent) => {
-        return {
-            x: e.clientX,
-            y: e.clientY
-        }
-    }).filter(value => value.x < 500).delay(300);
-
-    // .map(n => n * 2).filter(n => n > 4);
+let click = Observable.fromEvent(button, 'click');
 
 
-let onNext = (value) => {
-    circle.style.left = value.x + 'px';
-    circle.style.top = value.y + 'px';
-    console.log({top: window.getComputedStyle(circle)['top'], left: window.getComputedStyle(circle)['left']});
+let load = (url: string) => {
+    let xhr = new XMLHttpRequest();
+
+    xhr.addEventListener('load', () => {
+        console.log(xhr.responseText);
+        let movies = JSON.parse(xhr.responseText);
+        movies.forEach(m => {
+            let div = document.createElement("div");
+            div.innerText = m.title;
+            output.appendChild(div);
+        })
+    });
+    xhr.open("GET", url);
+    xhr.send();
 };
 
-source.subscribe(
-    onNext,
+
+click.subscribe(
+    event => load('movies.json'),
     e => console.log(`error: ${e}`),
     () => console.log('complete')
 );
