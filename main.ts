@@ -4,7 +4,9 @@ import "rxjs/add/operator/filter";
 import "rxjs/add/observable/fromEvent";
 import "rxjs/add/operator/delay";
 import "rxjs/add/operator/mergeMap";
-import "rxjs/add/operator/retry";
+import "rxjs/add/operator/retryWhen";
+import "rxjs/add/operator/scan";
+import "rxjs/add/operator/takeWhile";
 
 let output = document.getElementById('output');
 let button = document.getElementById('button');
@@ -29,8 +31,16 @@ let load = (url: string) => {
         });
         xhr.open("GET", url);
         xhr.send();
-    }).retry(3);
+    }).retryWhen(retryStrategy({attempts: 3, delay: 1500}));
 
+};
+
+let retryStrategy = ({attempts = 4, delay = 1000}) => {
+    return (errors) => {
+        return errors
+            .scan((acc, error) => {console.log(acc, error); return acc + 1}, 0).takeWhile(acc => acc < attempts)
+            .delay(delay);
+    };
 };
 
 let renderMovies = (movies) => {
@@ -42,7 +52,7 @@ let renderMovies = (movies) => {
 };
 
 
-click.flatMap(event => load("moviess.json"))
+click.flatMap(event => load("movies.json"))
     .subscribe(
     renderMovies,
     e => console.log(`error: ${e}`),
