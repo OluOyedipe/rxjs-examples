@@ -3,6 +3,7 @@ import "rxjs/add/operator/map";
 import "rxjs/add/operator/filter";
 import "rxjs/add/observable/fromEvent";
 import "rxjs/add/operator/delay";
+import "rxjs/add/operator/mergeMap";
 
 let output = document.getElementById('output');
 let button = document.getElementById('button');
@@ -11,24 +12,35 @@ let click = Observable.fromEvent(button, 'click');
 
 
 let load = (url: string) => {
-    let xhr = new XMLHttpRequest();
+    return Observable.create(observer => {
+        let xhr = new XMLHttpRequest();
 
-    xhr.addEventListener('load', () => {
-        console.log(xhr.responseText);
-        let movies = JSON.parse(xhr.responseText);
-        movies.forEach(m => {
-            let div = document.createElement("div");
-            div.innerText = m.title;
-            output.appendChild(div);
-        })
+
+        xhr.addEventListener('load', () => {
+
+            let data = JSON.parse(xhr.responseText);
+            observer.next(data);
+            observer.complete();
+
+        });
+        xhr.open("GET", url);
+        xhr.send();
     });
-    xhr.open("GET", url);
-    xhr.send();
+
+};
+
+let renderMovies = (movies) => {
+    movies.forEach(m => {
+        let div = document.createElement("div");
+        div.innerText = m.title;
+        output.appendChild(div);
+    })
 };
 
 
-click.subscribe(
-    event => load('movies.json'),
+click.flatMap(event => load("movies.json"))
+    .subscribe(
+    renderMovies,
     e => console.log(`error: ${e}`),
     () => console.log('complete')
 );
