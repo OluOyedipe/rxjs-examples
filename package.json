@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack-dev-server --watch --inline"
+    "start": "webpack-dev-server --watch --inline",
+    "typings": "typings install dt~es6-shim --global --save"
   },
   "keywords": [],
   "author": "",
